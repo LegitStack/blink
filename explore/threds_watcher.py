@@ -34,7 +34,7 @@ except (KeyboardInterrupt, SystemExit):
     sys.exit()
 #thread2.start()
 
-thread1.join()
+#thread1.join()
 #thread2.join()
 
 for k in range(50):
