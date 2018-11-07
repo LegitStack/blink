@@ -16,16 +16,17 @@ class Entity():
 
     def listen(self, msgboard):
         import time
+
         def wire(msgboard):
             print(f'listening to {msgboard.name} forever')
             previous_id = ''
-            #while True:
+            # while True:
             for i in range(15):
                 time.sleep(1)
                 latest_message = msgboard.get_message()
                 if previous_id != latest_message['id']:
                     print('found new message', latest_message)
-                    new_message_trigger(latest_message, msgboard.name)
+                    self.new_message_trigger(latest_message, msgboard.name)
                     previous_id = latest_message['id']
                 print(i)
 
@@ -66,7 +67,7 @@ class Entity():
                 ref_id=message['id'],
                 ref_board=msgboard.name,
                 response=response)
-            response_board = get_message_board(name='response')
+            response_board = self.get_message_board(name='response')
             self.say(message, response_board)
 
     def handle_response(self, message, msgboard):
@@ -118,7 +119,7 @@ class Entity():
         '''
         function, arguments = self.functions[name]
         # if this function requires no args
-        if arguments == (,):
+        if len(arguments) == 0:  # == (, )
             return self.functions[name][0]()
         # elif I already have all the args then each of those are functions...
         # so run those and get the results and return the results to the
@@ -156,27 +157,20 @@ class Entity():
         #         # m1 = partial(mult, y=2)
         #         # print(m1(x=3))
 
-
     def search_supplied(self, name, supplied: dict = None):
         supplied = supplied or {}
         if name in supplied:
             return supplied[name]
 
-        #def hear(self, msgboard):
-        #    def listen(msgboard):
-        #        print(f'listening to {msgboard.name} forever')
-        #        previous_message = ''
-        #        while True:
-        #            latest_message = msgboard.get_message()
-        #            if previous_message != latest_message:
-        #                print('should we do something about this?', latest_message)
-        #            previous_message = latest_message
-        #            yield
-        #    while True:
-        #        b.listen()
-
-
-
-#'''
-#for now this is for testing purposes
-#msgboard is a message_board.MSGBoard object
+        # def hear(self, msgboard):
+        #     def listen(msgboard):
+        #         print(f'listening to {msgboard.name} forever')
+        #         previous_message = ''
+        #         while True:
+        #             latest_message = msgboard.get_message()
+        #             if previous_message != latest_message:
+        #                 print('should we do something about this?', latest_message)
+        #             previous_message = latest_message
+        #             yield
+        #     while True:
+        #         b.listen()

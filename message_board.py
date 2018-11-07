@@ -24,15 +24,14 @@ class MSGBoard():
         '''
         here's what I'm thinking about the protocol:
         a message is a dictionary of values
-        a message requires an ID which is a huge random number. If one is not included the message board will put one on.
+        a message requires an ID which is a huge random number.
+        if a message ID is not included the message board will put one on.
         if a message contains REF_ID it is a response to a request and requires RESPONSE
-        if a message contains REF_ID and REF_BOARD it is a response to a request on another board and requires a RESPONSE
         if a message contains FUNCTION it is a request that someone run the function listed as it's value.
         '''
         if 'id' not in message.keys():
-            message['id'] = produce_id()
-        if ('ref_id' in message.keys()
-        and 'response' in message.keys()):
+            message['id'] = self.produce_id()
+        if 'ref_id' in message.keys() and 'response' in message.keys():
             return message, True
         if 'function' in message.keys():
             return message, True
