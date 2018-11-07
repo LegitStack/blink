@@ -49,12 +49,12 @@ class Entity():
         '''
         if msgboard.name == 'request':
             self.handle_request(message, msgboard)
-        elif msgboard.name == 'response':
-            self.handle_response(message, msgboard)
-        elif msgboard.name == 'behavior':
-            self.handle_behavior(message, msgboard)
-        else:
-            self.handle_unknown(message, msgboard)
+        # elif msgboard.name == 'response':
+        #     self.handle_response(message, msgboard)
+        # elif msgboard.name == 'behavior':
+        #     self.handle_behavior(message, msgboard)
+        # else:
+        #     self.handle_unknown(message, msgboard)
 
     def handle_request(self, message, msgboard):
         '''
@@ -69,32 +69,6 @@ class Entity():
                 response=response)
             response_board = self.get_message_board(name='response')
             self.say(message, response_board)
-
-    def handle_response(self, message, msgboard):
-        '''
-        search my history to see if I made the request, if so continue running that function.
-        '''
-        if self.search_history(message['request_id']):
-            pass
-            # return to the coroutine that is working on runing that function.
-            # if this repsonse gives that coroutine everything it needs then it will run the function,
-            # if it's still waiting on stuff it'll update the partial and yeild.
-
-    def handle_behavior(self, message, msgboard):
-        '''
-        search for a trigger for that behavior, if I have one, run the function
-        '''
-        trigger, function = self.search_triggers(message['behavior'])
-        if trigger:
-            self.run_function(function)
-
-    def handle_unknown(self, message, msgboard):
-        '''
-        search for the function, if I don't have it ignore, if I do, run it
-        '''
-        if 'function' in message.keys():
-            if self.search(message['function']):
-                self.run_function(message['function'])
 
     def search(self, name):
         if name in self.functions.keys():
@@ -116,6 +90,7 @@ class Entity():
         once it has all the args it should terminate, and be removed from the list of currently waiting coroutines.
         if the entity does have all the inputs, return the result of the function.
         if the entity is missing one or more inputs, ask for them.
+        You'll probably need a 'partial maker coroutine' then add each coroutine object to a queue to look at later.
         '''
         function, arguments = self.functions[name]
         # if this function requires no args
@@ -174,3 +149,35 @@ class Entity():
         #             yield
         #     while True:
         #         b.listen()
+
+
+
+
+
+### reduce complexity, add these in later:
+
+# def handle_response(self, message, msgboard):
+#     '''
+#     search my history to see if I made the request, if so continue running that function.
+#     '''
+#     if self.search_history(message['request_id']):
+#         pass
+#         # return to the coroutine that is working on runing that function.
+#         # if this repsonse gives that coroutine everything it needs then it will run the function,
+#         # if it's still waiting on stuff it'll update the partial and yeild.
+
+# def handle_behavior(self, message, msgboard):
+#     '''
+#     search for a trigger for that behavior, if I have one, run the function
+#     '''
+#     trigger, function = self.search_triggers(message['behavior'])
+#     if trigger:
+#         self.run_function(function)
+
+# def handle_unknown(self, message, msgboard):
+#     '''
+#     search for the function, if I don't have it ignore, if I do, run it
+#     '''
+#     if 'function' in message.keys():
+#         if self.search(message['function']):
+#             self.run_function(message['function'])

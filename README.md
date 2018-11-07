@@ -38,3 +38,12 @@ In a distributed computing model the message boards can be instantiated by distr
 it seems like programming has to go in this direction to me.
 
 That's the idea anyway.
+
+
+# idea v2
+
+As I've researched this idea a bit more I've learned that what I seem to be describing is a framework written on top of the actor model of programming. In this framework actors don't talk to each other through messages, instead they get and send messages to and from a queue or a series of queues (in this estimation 2 or 3 queues). Also in this framework actors have one or more functions and every argument to every function is a unique function living in some actor. actors come with a 'partial maker coroutine' capabilities so that it can build up functions one parameter at a time and be available to do whatever others are asking them to do in the meantime.
+
+This framework should allow us to have only one mapping of functions to arguments and it makes it so the programmer doesn't need to care about that when calling. The point of this framework is to use a communication scheme that adds to overhead in order to allow the programmer to program things more simply. its all about saving the programmer effort. nothing else.
+
+So if you need 
