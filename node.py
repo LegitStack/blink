@@ -1,6 +1,6 @@
-from threading import Thread
 import sys
-# from functools import partial
+from threading import Thread
+from functools import partial
 
 
 class Entity():
@@ -13,6 +13,7 @@ class Entity():
             feel free wrap state in functions. '''
         self.functions = functions
         self.msgboards = []
+        self.partial_builds = {}  # key is id of request sent out, value is tuple ( name of argument function originally requested, partial function of the original function that I own)
 
     def listen(self, msgboard):
         import time
@@ -47,10 +48,14 @@ class Entity():
         if message is a response, see if it's a response to a request you made
         if message is a behavior someone else did, see if it should trigger a function
         '''
-        if msgboard.name == 'request':
+        # right now the type of message is determined by the message itself.
+        # we can, however, in the future make boards for requests and responses
+        # right now we're assuming one message board to reduce complexity.
+        # in this model each board might be centered around a topic or something.
+        if 'request' in message.keys():  # requests include id, request (the name of a function)
             self.handle_request(message, msgboard)
-        # elif msgboard.name == 'response':
-        #     self.handle_response(message, msgboard)
+        elif 'response' in message.keys():  # responses include id, ref_id, response (data (could be function name...))
+            self.handle_response(message, msgboard)
         # elif msgboard.name == 'behavior':
         #     self.handle_behavior(message, msgboard)
         # else:
@@ -60,29 +65,70 @@ class Entity():
         '''
         search for the function, if I don't have it ignore, if I do, run it
         '''
-        if self.search(message['function']):
-            response = self.run_function(message['function'])
-            message = self.produce_message(
-                msgboard=msgboard,
-                ref_id=message['id'],
-                ref_board=msgboard.name,
-                response=response)
-            response_board = self.get_message_board(name='response')
-            self.say(message, response_board)
+        if self.search(message['request']):
+            pass # figure this out from below:
+            # response = self.run_function(message['request'])
 
-    def search(self, name):
-        if name in self.functions.keys():
-            return self.functions[name]
+            # id = 87
+            #
+            # # initially make the partial
+            # function_call = build_function_call(function_c)
+            #
+            # # each coroutine is added to a list of coroutines on the actor object
+            # active_function_builds = {}
+            # active_function_builds[id] = function_call
 
-    def produce_message(self, ref_id=None, response=None, function=None):
+    def handle_response(self, message, msgboard):
+        '''
+        search my history to see if I made the request, if so continue running that function.
+        '''
+        if self.search_history(message['ref_id']):
+            # add argument from message to partial function, try to run, if success return results.
+            self.partial_builds[message['ref_id']] = self.partial_builds[message['ref_id']][0], build_function_call(
+                self.partial_builds[message['ref_id']][1],
+                {self.partial_builds[message['ref_id']][0]: message['response']}
+            )
+            response = try_to_run(ref_id, self.partial_builds[message['ref_id']][1])
+            if response:
+                craft_response(message, msgboard, response)
+                self.say(message, msgboard)
+
+    def try_to_run(ref_id, function):
+        try:
+            response = function()
+            del self.partial_builds[ref_id]
+            return response
+        except Exception as e:
+            return None
+
+    def craft_response(message, msgboard, response=None, function=None):
+        ref_id = message['ref_id'] if 'ref_id' in message else ref_id = message['id']
+        return craft_message(msgboard, ref_id=ref_id, response=response, function=function)
+
+    def craft_message(msgboard, ref_id=None, response=None, function=None):
         message = {}
-        if ref_id:
+        message['id'] = msgboard.produce_id()
+        if ref_di:
             message['ref_id'] = ref_id
         if response:
             message['response'] = response
         if function:
-            message['function'] = function
+            message['request'] = function
         return message
+
+    def search_history(ref_id):
+        if ref_id in self.partial_builds.keys:
+            return True
+        return False
+
+    def build_function_call(partial_function, arg=None):
+        if arg:
+            return partial(partial_function, **arg)
+        return partial(partial_function)
+
+    def search(self, name):
+        if name in self.functions.keys():
+            return self.functions[name]
 
     def run_function(self, name):
         '''
@@ -156,15 +202,6 @@ class Entity():
 
 ### reduce complexity, add these in later:
 
-# def handle_response(self, message, msgboard):
-#     '''
-#     search my history to see if I made the request, if so continue running that function.
-#     '''
-#     if self.search_history(message['request_id']):
-#         pass
-#         # return to the coroutine that is working on runing that function.
-#         # if this repsonse gives that coroutine everything it needs then it will run the function,
-#         # if it's still waiting on stuff it'll update the partial and yeild.
 
 # def handle_behavior(self, message, msgboard):
 #     '''
@@ -179,5 +216,5 @@ class Entity():
 #     search for the function, if I don't have it ignore, if I do, run it
 #     '''
 #     if 'function' in message.keys():
-#         if self.search(message['function']):
-#             self.run_function(message['function'])
+#         if self.search(message['request']):
+#             self.run_function(message['request'])
