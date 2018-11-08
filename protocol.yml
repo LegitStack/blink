@@ -1,0 +1,21 @@
+required: [
+  id,
+]
+optional:
+  one of: [
+    ref_id,
+    ref_board,
+    response,
+    function,
+  ]
+  either: [
+    response,
+    function,
+  ]
+  both: [
+    ref_id,
+    response,
+  ]
+  optional: [
+    ref_board,
+  ]
