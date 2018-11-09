@@ -14,12 +14,12 @@ Message Boards - message boards, prototyped by the object MSGBoard are analogous
 
 Messages - as described above messages are not addressed to a specific actor. Ideally messages should have a protocol specific the board on which they're placed, but this feature has not been implemented. Messages have a few required fields: `id`, `ref_id`, `request`. Response messages have a `response` field. An optional field that modifies request is `substitutions` which is a dictionary and if a original request has that field all subsequent requests will have the `substitution` field to keep track of what the function should ultimately be substituted as. Here is an example of few messages that might be sent to the message board in order:
 
-  `{'id': 1, 'ref_id': 1, 'request': 'foo', 'substitions': {'bar':'baz', 'baz':'bar'}}`
-  `{'id': 2, 'ref_id': 1, 'request': 'baz', 'substition': 'bar'}`
-  `{'id': 3, 'ref_id': 1, 'request': 'bar', 'substition': 'baz'}`
-  `{'id': 4, 'ref_id': 2, 'request': 'baz', 'substition': 'bar', 'response': 3}`
-  `{'id': 5, 'ref_id': 2, 'request': 'bar', 'substition': 'baz', 'response': 7}`
-  `{'id': 6, 'ref_id': 1, 'request': 'foo', 'response': 10}`
+  -`{'id': 1, 'ref_id': 1, 'request': 'foo', 'substitions': {'bar':'baz', 'baz':'bar'}}`
+  -`{'id': 2, 'ref_id': 1, 'request': 'baz', 'substition': 'bar'}`
+  -`{'id': 3, 'ref_id': 1, 'request': 'bar', 'substition': 'baz'}`
+  -`{'id': 4, 'ref_id': 2, 'request': 'baz', 'substition': 'bar', 'response': 3}`
+  -`{'id': 5, 'ref_id': 2, 'request': 'bar', 'substition': 'baz', 'response': 7}`
+  -`{'id': 6, 'ref_id': 1, 'request': 'foo', 'response': 10}`
 
 In this example the `baz` function returns `3` and the `bar` function returns `7`. They are fed into the `foo` function as each other though: `foo(bar=3, baz=7)`. As you can see the `ref_id` is referring to the `id` number of the request that triggered it. The `request` is merely the name of a function, without regard to where that function lives or what it's inputs are, except in the case that we added `substitutions`.
 
@@ -37,8 +37,8 @@ What implications does this 'flipping' of responsibility have? I don't know. Doe
 
 ## to do:
 
-add triggers to actors (when a listed function is seen to have run, make a request of yourself to run a different function)
-create several examples of main which all get more complicated
-explore 'context' pattern
-explore default argument={} pattern
-decide what to do - request response at protocol level or message board level? probably protocol
+-add triggers to actors (when a listed function is seen to have run, make a request of yourself to run a different function)
+-create several examples of main which all get more complicated
+-explore 'context' pattern
+-explore default argument={} pattern
+-decide what to do - request response at protocol level or message board level? probably protocol
