@@ -1,6 +1,6 @@
 # What is Blink?
 
-First of all, Blink is a proof of concept still. Blink is a framework for the actor model of programming that treats every behavior of the system, and every thing that triggers the system to behave as event driven.
+First of all, Blink is a proof of concept still. Blink is a framework that sits on top of the actor model of programming. Blink treats every behavior of the system, and every thing that triggers the system to behave as event driven. It also treats the whole system as one coherent environment, and pushes the responsibility to aquire arguments for function off onto the functions themselves.
 
 ## Blink Concepts:
 
