@@ -15,8 +15,12 @@ class Actor():
             feel free wrap state in functions. '''
         self.functions = functions
         self.msgboards = []
+        #self.historic_messages = {}
+        # {original_message : (partial_function, dict_of_arg_requests_messages)}
+
         self.partial_builds = {}
         self.partial_build_requests = {}
+
         # key is id of request sent out,
         # value is tuple:
         #   (name of argument function originally requested,
@@ -82,7 +86,7 @@ class Actor():
             # initially make the partial
             function_call = self.build_partial(function)
             # each coroutine is added to a list of coroutines on the actor object
-            self.partial_builds[message['id']] = message['request'], function_call
+            self.partial_builds[message['id']] = message['request'], function_call, message['ref_id']
             if not self.attempt(ref_id=message['id'], message=message, msgboard=msgboard):
                 # ask for all the arguments for this function
                 for argument in arguments:
@@ -94,6 +98,12 @@ class Actor():
                     )
                     self.say(message=request_message, msgboard=msgboard)
                     self.partial_build_requests[request_message['id']] = message['id']
+                    # self.historic_messages.append(tuple(message, request_message))
+                    # {original_message : (partial_function, dict_of_arg_requests_messages)}
+                    # new design - save messages in queue to be taken care of with 2 more attributes:
+                    #   partial function getting built up.
+                    #   argument requests self.partial_build_requests[request_message['id']] = message['id']
+
         # let go of control
 
     def handle_response(self, message, msgboard):
@@ -107,7 +117,7 @@ class Actor():
             self.partial_builds[ref_id] = self.partial_builds[ref_id][0], self.build_partial(
                 partial_function=self.partial_builds[ref_id][1],
                 argument={message['request']: message['response']}
-            )
+            ), self.partial_builds[ref_id][2]
             print('partial_builds', self.partial_builds)
             self.attempt(
                 ref_id=ref_id,
@@ -129,6 +139,7 @@ class Actor():
             message = self.craft_response(
                 message=message,
                 msgboard=msgboard,
+                ref_id=self.partial_builds[ref_id][2],
                 request=self.partial_builds[ref_id][0],
                 response=response,
             )
@@ -148,8 +159,8 @@ class Actor():
         except Exception as e:
             return None
 
-    def craft_response(self, message, msgboard, request=None, response=None):
-        ref_id = message['id']
+    def craft_response(self, message, msgboard, ref_id=None, request=None, response=None):
+        ref_id = ref_id or message['id']
         return self.craft_message(
             message=message,
             msgboard=msgboard,

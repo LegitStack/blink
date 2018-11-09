@@ -47,8 +47,8 @@ actor_foo.listen(thoughts)
 actor_bar.listen(thoughts)
 actor_baz.listen(thoughts)
 actor_user.listen(thoughts)
-
-message = {'id': thoughts.produce_id(), 'request': 'show_foo'}
+new_id = thoughts.produce_id()
+message = {'id': new_id, 'ref_id': new_id, 'request': 'show_foo'}
 
 import time
 time.sleep(3)
