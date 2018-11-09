@@ -1,64 +1,44 @@
-the idea behind this project is to make a software architecture that treats computational units as individual autonomous agents in a network; acting in parallel and independently.
+# What is Blink?
 
-Node A, for instance, wants something.
-Node A simply names what she wants.
-Node B knows how to get what Node A wants but in order to do so he needs to get something first.
-Node B names the thing he wants, so he can get Node A's thing for her.
-Node C knows how to get what Node B wants but she needs something else.
-Node C names that something else she needs.
-Node A has the 'something else' that Node C wants so she presents it.
-Node C compiles that thing with her other thing and presents it.
-Node B sees that and compiles it with his other thing and presents it.
-Node A sees that her original request finally exists so she takes it.
+First of all, Blink is a proof of concept still. Blink is a framework for the actor model of programming that treats every behavior of the system, and every thing that triggers the system to behave as event driven.
 
-I envision 3 basic message queues:
+## Blink Concepts:
 
-Requests,
-Response (always references requests),
-Behaviors (can reference a previous behavior or request or response),
+There are a few concepts in Blink:
 
-A Requests is essentially a request for behavior or a request for information.
-A Response is data that someone has requested.
-A Behaviors is a log of a behavior a node has performed outside the system. This one can also be treated as shared state like a score where the last record of a certain type is the current score.
+Functions - basically everything is a function in Blink. State is encapsulated in functions. In other words, every argument to every function actually corresponds to the name of a different function. In this way an actor can ask for the result of a function without needing to supply it's arguments. (By the way, supplying it's arguments is done through substitution of the function-name-as-argument for some other function name the actor is in control of).
 
-All nodes listen to these three message boards all the time.
+Actors - Higher level than a function is an Actor. If functions are like knowledge about how to do something Actors are like people that know how to do things: they have several functions inside of them that they can perform. Upon request an actor may perform a function and return the results. Every actor must have unique functions.
 
-Each node knows what it can do, and no other nodes inherently know what other nodes do.
+Message Boards - message boards, prototyped by the object MSGBoard are analogous to message queues. Actors don't talk to each other directly, instead, they post messages on message boards, the boards don't even have a specific recipient, they simply request a function to be ran. If an actor subscribes to that message board that knows how to run the function they will attempt to do so, gathering up all the arguments (requesting other function calls) before they run the function and post a response message containing it's output.
 
-The Oracle Node knows everything that can be done by the system.
+Messages - as described above messages are not addressed to a specific actor. Ideally messages should have a protocol specific the board on which they're placed, but this feature has not been implemented. Messages have a few required fields: `id`, `ref_id`, `request`. Response messages have a `response` field. An optional field that modifies request is `substitutions` which is a dictionary and if a original request has that field all subsequent requests will have the `substitution` field to keep track of what the function should ultimately be substituted as. Here is an example of few messages that might be sent to the message board in order:
 
-Each Node can hold state.
+  `{'id': 1, 'ref_id': 1, 'request': 'foo', 'substitions': {'bar':'baz', 'baz':'bar'}}`
+  `{'id': 2, 'ref_id': 1, 'request': 'baz', 'substition': 'bar'}`
+  `{'id': 3, 'ref_id': 1, 'request': 'bar', 'substition': 'baz'}`
+  `{'id': 4, 'ref_id': 2, 'request': 'baz', 'substition': 'bar', 'response': 3}`
+  `{'id': 5, 'ref_id': 2, 'request': 'bar', 'substition': 'baz', 'response': 7}`
+  `{'id': 6, 'ref_id': 1, 'request': 'foo', 'response': 10}`
 
-You don't need to know who can do what, or what they need to do it. They know that.
+In this example the `baz` function returns `3` and the `bar` function returns `7`. They are fed into the `foo` function as each other though: `foo(bar=3, baz=7)`. As you can see the `ref_id` is referring to the `id` number of the request that triggered it. The `request` is merely the name of a function, without regard to where that function lives or what it's inputs are, except in the case that we added `substitutions`.
 
-I think I may be able to simulate this with objects and coroutines but it's an obvious network architecture so if I can create a prototype with objects perhaps it can serve as a basis for distributed computing.
+Two more fields that have not yet been discussed are `behavior` and `result` these two are required if `requests` is not present.
 
-In a distributed computing model the message boards can be instantiated by distributed consensus protocols such as hashgraph for an internal cluster, or blockchain for an external permissionless environment.
+(Originally the plan was that different boards would manage these different 'types' of messages: 'requests' 'responses', 'behaviors', but it was determined, at least for now, that these are protocol-level types because the way actors work require these combinations of fields, and therefore these types shouldn't be coupled to specifically named boards, perhaps that will change in the future, having 3 boards as required but other boards as optional too with their own protocols. Using multiple boards would require referencing `id`s across boards, that would require a `ref_board` field which seems to complicate things, but could also add the ability to make more refined and intricate systems.)
 
-it seems like programming has to go in this direction to me.
+`behavior` and `result` were originally thought to be a record keeping system for things an actor has done that was not triggered by another actor. However, upon closer review we've decided to remove behavior and result in favor of creating an actor that listens to outside systems and then makes a formal request upon being triggered. that way everything can fit into the framework of `request`->`response`.
 
-That's the idea anyway.
+## Philosophy
 
+The idea behind this proof of concept is to see what can be done in an environment where we've flipped the responsibility. Typically, in programming in general, if you're going to call a function you have to decide exactly what the function should receive as it's arguments. If we flip the responsibility to the function being called (or the actor overseeing the function being called) to get those arguments then we by necessity turn the whole system in to an environment where any element of that environment can be looked up in real time and used as input.
 
-# idea v2
+What implications does this 'flipping' of responsibility have? I don't know. Does it make building actual software that gets stuff done correctly harder? Or is there a way to work in this paradigm that reinforces the truth and which we might find more intuitive? I don't know.
 
-As I've researched this idea a bit more I've learned that what I seem to be describing is a framework written on top of the actor model of programming. In this framework actors don't talk to each other through messages, instead they get and send messages to and from a queue or a series of queues (in this estimation 2 or 3 queues) which is a broadcast to everyone subscribing to the queue. I thought of it this way to keep things simple. Also in this framework actors have one or more functions and every argument to every function is a unique function living in some actor. actors come with 'partial maker coroutine' capabilities so that it can build up functions one parameter at a time and be available to do whatever others are asking them to do in the meantime.
+## to do:
 
-This framework should allow us to have only one mapping of functions to arguments and it makes it so the programmer doesn't need to care about that when calling. The point of this framework is to use a communication scheme that adds to overhead in order to allow the programmer to program things more simply. its all about saving the programmer effort. nothing else.
-
-So if the entity gets a message that contains a request for them to run a function that they have they will look to see if they already have all the functions as arguments that this function requires, they probably will not. so they'll make a partial with what they can, add that partial to a coroutine list, and make a request for the network to give them the arguments they don't already have. once they see that a reply has been supplied referencing their request they will open up that partial and add the new argument to it. If all the arguments have been added they will continue to return it. otherwise they'll wait.
-
-So really the coroutine should be a run_function(function_name, request_id) because they need to look up everything for that function and manage it until they finally run it and return the output as a response referencing the original request.
-
-I think I need a solid example to program first. function a requires no arguments, it simply wraps data which is, we'll say 1. function b takes a and does some computation on it; multiplies it by 2, function c takes a and b and returns b * a. That way if you are the entity that has c function but not a or b you'll ask for a and b at the same time. whoever has a will return it to you. whoever has b will ask for a since they don't already have it and once the entity with a gives it to them they'll give it to you.
-
-Lets throw one more complication into the mix. lets say there are only two entities. but 3 functions.
-
-Entity 1 has functions a and c
-Entity 2 has function b
-
-So the user will ask the system for the results of function c. then entity 1 will see that message and notice that it has access to function c. It will then look through the inputs for function c and know that it does have a and does not have b. it will join a to c's argument as a partial, then send in a message to the system to get b then entity 2 will see that message, notice it has b but not b's only argument: a. Entity 2 will then send a request for a then entity 1 will see that message and return the answer to a. Then entity 2, upon receiving a will join it to the function b as a partial and having seen that all arguments have been satisfied will, instead of waiting, run the function, extract the answer and encapsulate it in a message to send back to the requester, entity 1, of course referencing the original request id. entity 1 will receive the message, join the answer to the argument list of c as b and run the function, encapsulate it in a message which it will return to the user.
-
-So the user is really just another entity to the system, one that only makes requests.
-
-so the infrastructure I need to code first is keeping track of these tasks they are waiting on and such.
+add triggers to actors (when a listed function is seen to have run, make a request of yourself to run a different function)
+create several examples of main which all get more complicated
+explore 'context' pattern
+explore default argument={} pattern
+decide what to do - request response at protocol level or message board level? probably protocol
