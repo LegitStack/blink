@@ -26,73 +26,44 @@ def nay(kay, jay):
     return kay + jay
 
 
-def show_bar(bar):
-    print(bar)
-
-
-def show_baz(baz):
-    print(baz)
-
-
-def show_foo(foo):
+def show(foo):
     print(foo)
     return True
 
 
-actor_foo = Actor(functions={
+actor_foo = Actor(verbose=True, functions={
     'foo': (foo, ('bar', 'baz', 'nay')),
 })
-actor_bar = Actor(functions={
+actor_bar = Actor(verbose=True, functions={
     'bar': (bar, tuple()),
 })
-actor_baz = Actor(functions={
+actor_baz = Actor(verbose=True, functions={
     'baz': (baz, tuple()),
 })
-actor_kay = Actor(functions={
+actor_kay = Actor(verbose=True, functions={
     'kay': (kay, tuple()),
 })
-actor_jay = Actor(functions={
+actor_jay = Actor(verbose=True, functions={
     'jay': (jay, tuple()),
 })
-actor_nay = Actor(functions={
+actor_nay = Actor(verbose=True, functions={
     'nay': (nay, ('kay', 'jay')),
 })
-actor_user = Actor(functions={
-    'show_bar': (show_bar, ('bar',)),
-    'show_baz': (show_baz, ('baz',)),
-    'show_foo': (show_foo, ('foo',)),
+actor_user = Actor(verbose=True, functions={
+    'show': (show, ('foo',)),
 })
 
 thoughts = MSGBoard('thoughts')
 
-actor_foo.listen(thoughts)
-actor_bar.listen(thoughts)
-actor_baz.listen(thoughts)
-actor_kay.listen(thoughts)
-actor_jay.listen(thoughts)
-actor_nay.listen(thoughts)
-actor_user.listen(thoughts)
+actor_foo.listen(thoughts, debug=True)
+actor_bar.listen(thoughts, debug=True)
+actor_baz.listen(thoughts, debug=True)
+actor_kay.listen(thoughts, debug=True)
+actor_jay.listen(thoughts, debug=True)
+actor_nay.listen(thoughts, debug=True)
+actor_user.listen(thoughts,debug=True)
+
 new_id = thoughts.produce_id()
-message = {'id': new_id, 'ref_id': new_id, 'request': 'show_foo'}
+message = {'id': new_id, 'ref_id': new_id, 'request': 'show', 'substitions': {'foo':'nay'}}
 
 actor_user.say(message, thoughts)
-
-# thoughts = MSGBoard('thoughts')
-# words = MSGBoard('words')
-# deeds = MSGBoard('deeds')
-#
-# from functions import \
-# test_function_0, test_function_1, test_function_2, test_function_3, test_function_4, test_function_5
-#
-# a = Entity({
-#     'test_function_0': (test_function_0, (None,)),
-#     'test_function_1': (test_function_1, ('test_function_2',))
-#     })
-# b = Entity({
-#     'test_function_2': (test_function_2, ('test_function_3', 'test_function_4',)),
-#     'test_function_3': (test_function_3, ('test_function_4', ))
-#     })
-# c = Entity({
-#     'test_function_4': (test_function_4, ('test_function_0',)),
-#     'test_function_5': (test_function_5, ('test_function_1', 'test_function_3',))
-#     })
