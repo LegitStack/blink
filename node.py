@@ -3,6 +3,9 @@ from threading import Thread
 from functools import partial
 from inspect import signature
 
+# TODO add ability to refer to a different board,
+# TODO add ability to trigger messages to go to a different board.
+# TODO add ability for user to talk to actor who asks for things.
 
 class Actor():
     ''' an entity does computation, though nobody else knows what it is or how to call it. '''
@@ -190,7 +193,8 @@ class Actor():
         ref_id=None,
         response=None,
         request=None,
-        substitution=None
+        substitution=None,
+        substitutions=None,
     ):
         message = {'id': msgboard.produce_id()}
         if ref_id:
@@ -201,6 +205,8 @@ class Actor():
             message['request'] = request
         if substitution:
             message['substitution'] = substitution
+        if substitutions:
+            message['substitutions'] = substitutions
         return message
 
     def say(self, message, msgboard):

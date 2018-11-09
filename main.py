@@ -30,7 +30,7 @@ def show(foo):
     print(foo)
     return True
 
-
+# these function details could be deduced from their signature instead of made explicit...
 actor_foo = Actor(verbose=True, functions={
     'foo': (foo, ('bar', 'baz', 'nay')),
 })
