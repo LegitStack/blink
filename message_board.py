@@ -1,8 +1,8 @@
 class MSGBoard():
     def __init__(self, name):
         self.name = name
-        self.id = 0
-        self.messages = ['init']
+        self.id = 1
+        self.messages = [{'id': 0, 'ref_id': 0, 'response': 'initial'}]
 
     def add_message(self, message):
         message, answer = self.validate_message(message)
@@ -27,13 +27,13 @@ class MSGBoard():
         a message requires an ID which is a huge random number.
         if a message ID is not included the message board will put one on.
         if a message contains REF_ID it is a response to a request and requires RESPONSE
-        if a message contains FUNCTION it is a request that someone run the function listed as it's value.
+        if a message contains FUNCTION it is a request that someone run the request listed as it's value.
         '''
         if 'id' not in message.keys():
             message['id'] = self.produce_id()
         if 'ref_id' in message.keys() and 'response' in message.keys():
             return message, True
-        if 'function' in message.keys():
+        if 'request' in message.keys():
             return message, True
         return message, False
 
