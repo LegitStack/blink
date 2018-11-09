@@ -2,8 +2,8 @@ from message_board import MSGBoard
 from node import Actor
 
 
-def foo(bar, baz):
-    return bar + baz
+def foo(bar, baz, nay):
+    return bar + baz + nay
 
 
 def bar():
@@ -12,6 +12,18 @@ def bar():
 
 def baz():
     return 30
+
+
+def kay():
+    return 300
+
+
+def jay():
+    return 3000
+
+
+def nay(kay, jay):
+    return kay + jay
 
 
 def show_bar(bar):
@@ -24,16 +36,26 @@ def show_baz(baz):
 
 def show_foo(foo):
     print(foo)
+    return True
 
 
 actor_foo = Actor(functions={
-    'foo': (foo, ('bar', 'baz')),
+    'foo': (foo, ('bar', 'baz', 'nay')),
 })
 actor_bar = Actor(functions={
     'bar': (bar, tuple()),
 })
 actor_baz = Actor(functions={
     'baz': (baz, tuple()),
+})
+actor_kay = Actor(functions={
+    'kay': (kay, tuple()),
+})
+actor_jay = Actor(functions={
+    'jay': (jay, tuple()),
+})
+actor_nay = Actor(functions={
+    'nay': (nay, ('kay', 'jay')),
 })
 actor_user = Actor(functions={
     'show_bar': (show_bar, ('bar',)),
@@ -46,12 +68,13 @@ thoughts = MSGBoard('thoughts')
 actor_foo.listen(thoughts)
 actor_bar.listen(thoughts)
 actor_baz.listen(thoughts)
+actor_kay.listen(thoughts)
+actor_jay.listen(thoughts)
+actor_nay.listen(thoughts)
 actor_user.listen(thoughts)
 new_id = thoughts.produce_id()
 message = {'id': new_id, 'ref_id': new_id, 'request': 'show_foo'}
 
-import time
-time.sleep(3)
 actor_user.say(message, thoughts)
 
 # thoughts = MSGBoard('thoughts')

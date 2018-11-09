@@ -19,7 +19,6 @@ class Actor():
         # {original_message : (partial_function, dict_of_arg_requests_messages)}
 
         self.partial_builds = {}
-        self.partial_build_requests = {}
 
         # key is id of request sent out,
         # value is tuple:
@@ -32,18 +31,15 @@ class Actor():
         def wire(msgboard):
             print(f'listening to {msgboard.name} forever')
             seen_messages = []
-            # while True:
-            for i in range(6):
-                time.sleep(1)
+            while True:
+            # for i in range(20):
                 all_messages = msgboard.get_messages(0)  # get all messages
                 all_ids = [msg['id'] for msg in all_messages]
                 missing_ids = sorted(set(all_ids) - set(seen_messages))  # oldest to newest
                 for missing_id in missing_ids:
                     message = [msg for msg in all_messages if msg['id'] == missing_id][0]
-                    print('found new message', message)
                     self.new_message_trigger(message, msgboard)
                     seen_messages.append(missing_id)
-                print(i)
 
         threads = []
         threads.append(Thread(target=wire, args=(msgboard,)))
@@ -82,44 +78,44 @@ class Actor():
     def handle_request(self, message, msgboard):
         ''' search for the function, if I don't have it ignore, if I do, run it '''
         if message['request'] in self.functions.keys():
+            print('found new message', message)
             function, arguments = self.functions[message['request']]
             # initially make the partial
             function_call = self.build_partial(function)
             # each coroutine is added to a list of coroutines on the actor object
             self.partial_builds[message['id']] = message['request'], function_call, message['ref_id']
-            if not self.attempt(ref_id=message['id'], message=message, msgboard=msgboard):
+            if not self.attempt(
+                ref_id=message['id'],
+                message=message,
+                msgboard=msgboard,
+            ):
                 # ask for all the arguments for this function
                 for argument in arguments:
                     request_message = self.craft_message(
-                        message=message,
                         ref_id=message['id'],
                         msgboard=msgboard,
                         request=argument,
                     )
                     self.say(message=request_message, msgboard=msgboard)
-                    self.partial_build_requests[request_message['id']] = message['id']
                     # self.historic_messages.append(tuple(message, request_message))
                     # {original_message : (partial_function, dict_of_arg_requests_messages)}
                     # new design - save messages in queue to be taken care of with 2 more attributes:
                     #   partial function getting built up.
-                    #   argument requests self.partial_build_requests[request_message['id']] = message['id']
 
         # let go of control
 
     def handle_response(self, message, msgboard):
         ''' search my history to see if I made the request, if so continue running that function. '''
-        if message['ref_id'] in self.partial_build_requests.keys():
-            print('I have been waiting for ', message)
-            ref_id = self.partial_build_requests[message['ref_id']]
-            print('I have been waiting!!!', ref_id)
-            print('-//', self.partial_build_requests)  # HERE WE":RE MISSING WHAT WE SHOULD GIVE BACK TO. conection for 1-2
-            # add argument from message to partial function, try to run, if success return results.
+        if message['ref_id'] in self.partial_builds.keys():
+            print('found new message', message)
+            #ref_id = self.partial_builds[message['ref_id']][0]
+            ref_id = message['ref_id']
+            # add argument from message to partial function,
             self.partial_builds[ref_id] = self.partial_builds[ref_id][0], self.build_partial(
                 partial_function=self.partial_builds[ref_id][1],
                 argument={message['request']: message['response']}
             ), self.partial_builds[ref_id][2]
-            print('partial_builds', self.partial_builds)
-
+            # try to run, if success return results.
             self.attempt(
                 ref_id=ref_id,
                 message=message,
@@ -134,9 +130,8 @@ class Actor():
         return partial(partial_function)
 
     def attempt(self, ref_id, message, msgboard):
-        response = self.try_to_run(ref_id, self.partial_builds[ref_id][1])
-        print('---', response)
-        if response:
+        success, response = self.try_to_run(self.partial_builds[ref_id][1])
+        if success:
             message = self.craft_response(
                 message=message,
                 msgboard=msgboard,
@@ -144,7 +139,6 @@ class Actor():
                 request=self.partial_builds[ref_id][0],
                 response=response,
             )
-            print(message)
             self.say(
                 message=message,
                 msgboard=msgboard,
@@ -153,24 +147,23 @@ class Actor():
             return True
         return False
 
-    def try_to_run(self, ref_id, function):
+    def try_to_run(self, function):
         try:
             response = function()
-            return response
+            return True, response
         except Exception as e:
-            return None
+            return False, None
 
     def craft_response(self, message, msgboard, ref_id=None, request=None, response=None):
         ref_id = ref_id or message['id']
         return self.craft_message(
-            message=message,
             msgboard=msgboard,
             ref_id=ref_id,
             response=response,
             request=request,
         )
 
-    def craft_message(self, message, msgboard, ref_id=None, response=None, request=None):
+    def craft_message(self, msgboard, ref_id=None, response=None, request=None):
         message = {}
         message['id'] = msgboard.produce_id()
         if ref_id:
