@@ -33,7 +33,7 @@ class Actor():
             print(f'listening to {msgboard.name} forever')
             seen_messages = []
             # while True:
-            for i in range(10):
+            for i in range(6):
                 time.sleep(1)
                 all_messages = msgboard.get_messages(0)  # get all messages
                 all_ids = [msg['id'] for msg in all_messages]
@@ -119,6 +119,7 @@ class Actor():
                 argument={message['request']: message['response']}
             ), self.partial_builds[ref_id][2]
             print('partial_builds', self.partial_builds)
+
             self.attempt(
                 ref_id=ref_id,
                 message=message,
