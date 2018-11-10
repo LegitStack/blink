@@ -38,18 +38,28 @@ The idea behind this proof of concept is to see what can be done in an environme
 
 What implications does this 'flipping' of responsibility have? I don't know. Does it make building actual software that gets stuff done correctly harder? Or is there a way to work in this paradigm that reinforces the truth and which we might find more intuitive? I don't know.
 
-It seems to my intuition that not only is a distributed architecture the future, but also a swarm architecture where each actor is endowed with some level of intelligence and given dominion over understanding certain types of tasks. The pattern we are concepting out here is merely that idea in it's infancy out of micromanagement. 
+It seems to my intuition that not only is a distributed architecture the future, but also a swarm architecture where each actor is endowed with some level of intelligence and given dominion over understanding certain types of tasks. The pattern we are concepting out here is merely that idea in it's infancy out of micromanagement.
+
+I think that perhaps a major component to this architecture's power is it's ability to (though it involves communication overhead that a simple set of instructions do not) automatically work on many computers as it does on one computer without changing the codebase whatsoever. I mean you need to switch out the communication model for something that communicates over a network instead of this in memory object model but that's nothing once the system is mature. And in order to reduce the amount of communication required you can, (or the program itself can learn to) group common functions together in the same actors.
+
+Functions are just names given for a specific transformation on data. but a function can also be modified. Thus the data that it is transforming can be a representation of a transformation on unknown data. Thus functions can be incrementally mutated over the life of the system.
+
+## integrating with distributed consensus mechanisms
+
+One thing that must be done before this system is mature is to integrate the gossip protocol (Hashgraph) so that actors can re-evaluate past decisions they made in light of new information about the true state of the system at the time that their decision was made and issue an updated response in the event that something substantial they believed or took as input was not true and therefore their response was inaccurate to the requested task.
 
 ## to do:
 
-add triggers to actors (when a listed function is seen to have run, make a request to run a different function)
-
-create several examples of main which all get more complicated
-
-explore 'context' pattern
-
-explore default argument={} pattern
+fix triggers to trigger special case shutdown (triggers work for normal case)
 
 decide what to do - request response at protocol level or message board level? probably protocol
 
-allow actors to listen to outside systems
+give actors ability to run already owned functions without creating a message (without officially asking yourself to run them (we should record them somewhere incase others have triggers on that function - so maybe a behaviors message board pattern is a good idea, or maybe it's a new message type: like an fyi request that others will automatically ignore unless they're waiting to be triggered by something.), I kind of do want to keep it asking itself officially to do things it knows about because I want to have an accurate history of what happened when...)
+
+integrate gossip about gossip protocol to come to a consensus on the ordering of events and the true state of the system at any given moment
+
+integrate a response mechanism to the gossip protocol so that if a previous response was junk due to a lack of knowledge about the true state of the system we can issue an updated response
+
+explore 'context' pattern
+
+explore default argument={} pattern to automatically remember state

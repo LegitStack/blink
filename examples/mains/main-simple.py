@@ -2,8 +2,8 @@ from message_board import MSGBoard
 from node import Actor
 
 
-def foo(bar, baz, nay):
-    return bar + baz + nay
+def foo(bar, baz):
+    return bar + baz
 
 
 def bar():
@@ -14,42 +14,30 @@ def baz():
     return 30
 
 
-def kay():
-    return 300
-
-
-def jay():
-    return 3000
-
-
-def nay(kay, jay):
-    return kay + jay
-
-
 def show(foo):
     print(foo)
     return True
 
 # these function details could be deduced from their signature instead of made explicit...
 actor_foo = Actor(verbose=True, functions={
-    'foo': (foo, ('bar', 'baz', 'nay')),
-    'baz': (baz, tuple()),
+    'foo': (foo, ('bar', 'baz')),
 })
-actor_kay = Actor(verbose=True, functions={
+actor_bar = Actor(verbose=True, functions={
     'bar': (bar, tuple()),
-    'kay': (kay, tuple()),
-    'jay': (jay, tuple()),
+})
+actor_baz = Actor(verbose=True, functions={
+    'baz': (baz, tuple()),
 })
 actor_user = Actor(verbose=True, functions={
     'show': (show, ('foo',)),
-    'nay': (nay, ('kay', 'jay')),
 })
 
 thoughts = MSGBoard('thoughts')
 
-actor_foo.listen(thoughts, debug=True)
-actor_kay.listen(thoughts, debug=True)
-actor_user.listen(thoughts,debug=True)
+actor_foo.listen(thoughts)
+actor_bar.listen(thoughts)
+actor_baz.listen(thoughts)
+actor_user.listen(thoughts)
 
 new_id = thoughts.produce_id()
 message = {'id': new_id, 'ref_id': new_id, 'request': 'show'}

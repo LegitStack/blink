@@ -11,12 +11,22 @@ import inspect
 class Actor():
     ''' an entity does computation, though nobody else knows what it is or how to call it. '''
 
-    def __init__(self, functions: dict, verbose=False, accepts_user_input=False):
-        ''' functions is a dictionary:
-            {name: (function, arguments)}
-            {string: (function, tuple of function names)}
-            feel free wrap state in functions. '''
-        self.functions = functions
+    def __init__(self,
+        functions: dict = None,
+        triggers: dict = None,
+        verbose: bool = False,
+        accepts_user_input: bool = False,
+    ):
+        '''
+        functions is a dictionary:
+        {name: (function, arguments)}
+        {string: (function, tuple of function names)}
+        feel free wrap state in functions.
+        triggers is a dictionary:
+        {trigger_function_name: function_name}
+        '''
+        self.functions = functions or {}
+        self.triggers = triggers or {}
         self.msgboards = []
         self.partial_builds = {}
         self.verbose = verbose
@@ -24,6 +34,11 @@ class Actor():
         if accepts_user_input:
             self.listen_to_user()
 
+    def add_function(self, name, function, arguments: tuple):
+        self.functions[name] = (function, arguments)
+
+    def add_trigger(self, name, function_name):
+        self.triggers[name] = function_name
 
     def listen_to_user(self):
 
@@ -65,7 +80,7 @@ class Actor():
                 missing_ids = sorted(set(all_ids) - set(seen_messages))
                 for missing_id in missing_ids:
                     message = [msg for msg in all_messages if msg['id'] == missing_id][0]
-                    self.new_message_trigger(message, msgboard)
+                    self.route_new_message(message, msgboard)
                     seen_messages.append(missing_id)
 
         threads = []
@@ -80,7 +95,7 @@ class Actor():
 
         print('saved', self.msgboards) if self.verbose else None
 
-    def new_message_trigger(self, message, msgboard):
+    def route_new_message(self, message, msgboard):
         '''
         determin if we care about this message or not:
         if message is a request for one of it's functions, do the function
@@ -93,33 +108,15 @@ class Actor():
         # else:
         #     self.handle_unknown(message, msgboard)
         '''
+
         if 'response' not in message.keys():
             self.handle_request(message=message, msgboard=msgboard)
         elif 'response' in message.keys():
             self.handle_response(message=message, msgboard=msgboard)
-
-    def manage_substituion(self, message, argument):
-        '''
-        if a message is a request a substitution for an argument may be included
-        in the form of the name of a different function. it looks like this:
-        {'id': 1, 'ref_id': 1, 'request': 'foo', 'substitutions': {'bar': 'baz', 'baz': 'bar'}}
-        we want this functionality: foo(bar=bar, baz=baz) -> foo(bar=baz, baz=bar)
-        thus when I see substitution and I need to ask for functions, I really need
-        to ask for the substituted functions names, and I should check if I own the
-        substituted names rather than the originals.
-        '''
-        if 'substitutions' not in message.keys() and 'substitution' not in message.keys():
-            substitution = None
-        elif 'substitution' in message.keys():
-            substitution = message['substitution']
-        else:
-            substitution = argument
-
-        if 'substitutions' in message.keys():
-            if argument in message['substitutions'].keys():
-                return message['substitutions'][argument], substitution
-        return argument, substitution
-
+            if 'substitution' in message.keys() and message['substitution'] in self.triggers.keys():
+                self.handle_trigger(trigger=message['substitution'], message=message, msgboard=msgboard)
+            elif message['request'] in self.triggers.keys():
+                self.handle_trigger(trigger=message['request'], message=message, msgboard=msgboard)
 
     def handle_request(self, message, msgboard):
         '''
@@ -174,6 +171,71 @@ class Actor():
                 msgboard=msgboard,
             )
 
+    def handle_trigger(self, trigger, message, msgboard):
+        '''
+        very much like handle request
+        trigger doesn't quite work for special case: shutdown
+        '''
+        triggered = self.triggers[trigger]
+        print('trigger', trigger, 'triggered', triggered)
+        if triggered == 'shutdown':
+            request_message = self.craft_message(
+                ref_id=message['id'],
+                msgboard=msgboard,
+                request=triggered,
+            )
+            self.say(message=request_message, msgboard=msgboard)
+            print('shutting down')
+            self.shutdown = True
+            sys.exit()
+        elif triggered in self.functions.keys():
+            function, arguments = self.functions[triggered]
+            function_call = self.build_partial(function)
+            self.partial_builds[message['id']] = triggered, function_call, message['ref_id']
+            if not self.attempt(
+                ref_id=message['id'],
+                message=message,
+                msgboard=msgboard,
+            ):
+                for argument in arguments:
+                    arg, substitution = self.manage_substituion(message, argument)
+                    request_message = self.craft_message(
+                        ref_id=message['id'],
+                        msgboard=msgboard,
+                        request=arg,
+                        substitution=substitution,
+                    )
+                    self.say(message=request_message, msgboard=msgboard)
+        else:
+            request_message = self.craft_message(
+                ref_id=message['id'],
+                msgboard=msgboard,
+                request=triggered,
+            )
+            self.say(message=request_message, msgboard=msgboard)
+
+    def manage_substituion(self, message, argument):
+        '''
+        if a message is a request a substitution for an argument may be included
+        in the form of the name of a different function. it looks like this:
+        {'id': 1, 'ref_id': 1, 'request': 'foo', 'substitutions': {'bar': 'baz', 'baz': 'bar'}}
+        we want this functionality: foo(bar=bar, baz=baz) -> foo(bar=baz, baz=bar)
+        thus when I see substitution and I need to ask for functions, I really need
+        to ask for the substituted functions names, and I should check if I own the
+        substituted names rather than the originals.
+        '''
+        if 'substitutions' not in message.keys() and 'substitution' not in message.keys():
+            substitution = None
+        elif 'substitution' in message.keys():
+            substitution = message['substitution']
+        else:
+            substitution = argument
+
+        if 'substitutions' in message.keys():
+            if argument in message['substitutions'].keys():
+                return message['substitutions'][argument], substitution
+        return argument, substitution
+
     def build_partial(self, partial_function, argument=None):
         ''' turn function into partial or add arguments to existing partial '''
         if argument:
@@ -219,8 +281,7 @@ class Actor():
             substitution=substitution,
         )
 
-    def craft_message(
-        self,
+    def craft_message(self,
         msgboard,
         ref_id=None,
         response=None,

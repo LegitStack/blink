@@ -72,26 +72,24 @@ def shutdown():
 
 
 # these function details could be deduced from their signature instead of made explicit...
-actor_foo = Actor(verbose=True, functions={
-    'foo': (foo, ('bar', 'baz', 'nay')),
-    'baz': (baz, tuple()),
-    'shutdown': (shutdown, tuple()),
-})
-actor_kay = Actor(verbose=True, functions={
-    'bar': (bar, tuple()),
-    'kay': (kay, tuple()),
-    'jay': (jay, tuple()),
-    'nay': (nay, ('kay', 'jay')),
-    'shutdown': (shutdown, tuple()),
-})
-actor_user = Actor(accepts_user_input=True, verbose=True, functions={
-    'show': (show, ('foo',)),
-    'shutdown': (shutdown, tuple()),
-    #'user_input': (user_input, tuple()),
-})
+actor_foo = Actor(verbose=True)
+actor_kay = Actor(verbose=True)
+actor_user = Actor(accepts_user_input=True, verbose=True)
 
 thoughts = MSGBoard('thoughts')
 
-actor_foo.listen(thoughts,)
-actor_kay.listen(thoughts,)
-actor_user.listen(thoughts,)
+actor_foo.listen(thoughts)
+actor_kay.listen(thoughts)
+actor_user.listen(thoughts)
+
+actor_foo.add_function(name='foo', function=foo, arguments=('bar', 'baz', 'nay'))
+actor_foo.add_function(name='baz', function=baz, arguments=tuple())
+actor_foo.add_function(name='shutdown', function=shutdown, arguments=tuple())
+actor_kay.add_function(name='bar', function=bar, arguments=tuple())
+actor_kay.add_function(name='kay', function=kay, arguments=tuple())
+actor_kay.add_function(name='jay', function=jay, arguments=tuple())
+actor_kay.add_function(name='nay', function=nay, arguments=('kay', 'jay'))
+actor_kay.add_function(name='shutdown', function=shutdown, arguments=tuple())
+actor_user.add_function(name='show', function=show, arguments=('foo',))
+actor_user.add_function(name='shutdown', function=shutdown, arguments=tuple())
+actor_user.add_trigger(name='show', function_name='shutdown')

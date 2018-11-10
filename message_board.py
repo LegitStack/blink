@@ -2,7 +2,7 @@ class MSGBoard():
     def __init__(self, name):
         self.name = name
         self.id = 1
-        self.messages = [{'id': 0, 'ref_id': 0, 'response': 'initial'}]
+        self.messages = [{'id': 0, 'ref_id': 0, 'request': '', 'response': 'initial'}]
 
     def add_message(self, message):
         message, answer = self.validate_message(message)

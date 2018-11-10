@@ -92,6 +92,6 @@ actor_user = Actor(accepts_user_input=True, verbose=True, functions={
 
 thoughts = MSGBoard('thoughts')
 
-actor_foo.listen(thoughts,)
-actor_kay.listen(thoughts,)
-actor_user.listen(thoughts,)
+actor_foo.listen(thoughts)
+actor_kay.listen(thoughts)
+actor_user.listen(thoughts)
