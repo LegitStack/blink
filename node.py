@@ -1,7 +1,8 @@
 import sys
 from threading import Thread
 from functools import partial
-from inspect import signature
+import inspect
+
 
 # TODO add ability to refer to a different board,
 # TODO add ability to trigger messages to go to a different board.
@@ -10,7 +11,7 @@ from inspect import signature
 class Actor():
     ''' an entity does computation, though nobody else knows what it is or how to call it. '''
 
-    def __init__(self, functions: dict, verbose=False):
+    def __init__(self, functions: dict, verbose=False, accepts_user_input=False):
         ''' functions is a dictionary:
             {name: (function, arguments)}
             {string: (function, tuple of function names)}
@@ -19,19 +20,46 @@ class Actor():
         self.msgboards = []
         self.partial_builds = {}
         self.verbose = verbose
+        self.shutdown = False
+        if accepts_user_input:
+            self.listen_to_user()
 
-    def listen(self, msgboard, debug=False):
+
+    def listen_to_user(self):
+
+        def wire():
+            print(f'listening to user input forever') if self.verbose else None
+            while True:
+                the_voice_of_god = input()
+                if the_voice_of_god in self.functions.keys():
+                    # allow user to change message board too
+                    new_id = self.msgboards[0].produce_id()
+                    message = {'id': new_id, 'ref_id': new_id, 'request': the_voice_of_god}
+                    self.say(message, self.msgboards[0])
+                    if the_voice_of_god == 'shutdown':
+                        print('shutting down')
+                        self.shutdown = True
+                        sys.exit()
+
+        threads = []
+        threads.append(Thread(target=wire))
+
+        try:
+            threads[-1].start()
+        except (KeyboardInterrupt, SystemExit):
+            sys.exit()
+
+        print('listening to user input now') if self.verbose else None
+
+    def listen(self, msgboard):
 
         def wire(msgboard):
             print(f'listening to {msgboard.name} forever') if self.verbose else None
             seen_messages = []
-            if debug:
-                import time
-                t_end = time.time() + 6
-                condition = 'time.time() < t_end'
-            else:
-                condition = 'True'
-            while eval(condition):
+            while True:
+                if self.shutdown:
+                    print('shutting down listen thread')
+                    sys.exit()
                 all_messages = msgboard.get_messages(0)
                 all_ids = [msg['id'] for msg in all_messages]
                 missing_ids = sorted(set(all_ids) - set(seen_messages))
@@ -132,7 +160,7 @@ class Actor():
             print('incoming response', message) if self.verbose else None
             ref_id = message['ref_id']
             if ('substitution' in message
-            and message['substitution'] in list(signature(self.partial_builds[ref_id][1]).parameters)):
+            and message['substitution'] in list(inspect.signature(self.partial_builds[ref_id][1]).parameters)):
                 arg = message['substitution']
             else:
                 arg = message['request']
