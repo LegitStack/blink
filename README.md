@@ -15,15 +15,15 @@ Message Boards - message boards, prototyped by the object MSGBoard are analogous
 Messages - as described above messages are not addressed to a specific actor. Ideally messages should have a protocol specific the board on which they're placed, but this feature has not been implemented. Messages have a few required fields: `id`, `ref_id`, `request`. Response messages have a `response` field. An optional field that modifies request is `substitutions` which is a dictionary and if an original request has that field all subsequent requests will have the `substitution` field to keep track of what the function should ultimately be substituted as. Here is an example of a few messages that might be sent to the message board in order:
 
   `{'id': 1, 'ref_id': 1, 'request': 'foo', 'substitutions': {'bar':'baz', 'baz':'bar'}}`
-  
+
   `{'id': 2, 'ref_id': 1, 'request': 'baz', 'substitution': 'bar'}`
-  
+
   `{'id': 3, 'ref_id': 1, 'request': 'bar', 'substitution': 'baz'}`
-  
+
   `{'id': 4, 'ref_id': 2, 'request': 'baz', 'substitution': 'bar', 'response': 3}`
-  
+
   `{'id': 5, 'ref_id': 2, 'request': 'bar', 'substitution': 'baz', 'response': 7}`
-  
+
   `{'id': 6, 'ref_id': 1, 'request': 'foo', 'response': 10}`
 
 In this example the `baz` function returns `3` and the `bar` function returns `7`. They are fed into the `foo` function as each other though: `foo(bar=3, baz=7)`. As you can see the `ref_id` is referring to the `id` number of the request that triggered it. The `request` is merely the name of a function, without regard to where that function lives or what it's inputs are, except in the case that we added `substitutions`.
@@ -37,6 +37,8 @@ In this example the `baz` function returns `3` and the `bar` function returns `7
 The idea behind this proof of concept is to see what can be done in an environment where we've flipped the responsibility. Typically, in programming in general, if you're going to call a function you have to decide exactly what the function should receive as it's arguments. If we flip the responsibility to the function being called (or the actor overseeing the function being called) to get those arguments then we by necessity turn the whole system in to an environment where any element of that environment can be looked up in real time and used as input.
 
 What implications does this 'flipping' of responsibility have? I don't know. Does it make building actual software that gets stuff done correctly harder? Or is there a way to work in this paradigm that reinforces the truth and which we might find more intuitive? I don't know.
+
+It seems to my intuition that not only is a distributed architecture the future, but also a swarm architecture where each actor is endowed with some level of intelligence and given dominion over understanding certain types of tasks. The pattern we are concepting out here is merely that idea in it's infancy out of micromanagement. 
 
 ## to do:
 

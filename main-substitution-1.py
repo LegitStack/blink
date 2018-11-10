@@ -64,6 +64,6 @@ actor_nay.listen(thoughts, debug=True)
 actor_user.listen(thoughts,debug=True)
 
 new_id = thoughts.produce_id()
-message = {'id': new_id, 'ref_id': new_id, 'request': 'show', 'substitions': {'foo':'nay'}}
+message = {'id': new_id, 'ref_id': new_id, 'request': 'show', 'substitutions': {'foo':'nay'}}
 
 actor_user.say(message, thoughts)
