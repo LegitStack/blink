@@ -44,6 +44,8 @@ I think that perhaps a major component to this architecture's power is it's abil
 
 Functions are just names given for a specific transformation on data. but a function can also be modified. Thus the data that it is transforming can be a representation of a transformation on unknown data. Thus functions can be incrementally mutated over the life of the system.
 
+eventually we want to get to the point where actors are guiding other actors on how to change in a hierarchy and networked fashion. If all functions are just a transformation on data and if the representation for that transformation is itself just data we want to have functions modify other functions so they tranform the data correctly for their context and needs
+
 ## integrating with distributed consensus mechanisms
 
 One thing that must be done before this system is mature is to integrate the gossip protocol (Hashgraph) so that actors can re-evaluate past decisions they made in light of new information about the true state of the system at the time that their decision was made and issue an updated response in the event that something substantial they believed or took as input was not true and therefore their response was inaccurate to the requested task.
@@ -51,6 +53,10 @@ One thing that must be done before this system is mature is to integrate the gos
 ## to do:
 
 fix triggers to trigger special case shutdown (triggers work for normal case)
+
+node add ability to refer to a different board
+node add ability to trigger messages to go to a different board
+node add ability to substitute arguments when adding functions to the actor such as when we have a print_someting function that we want to be able to pass any function into it and then have it pass return the original object to pass onto something else
 
 decide what to do - request response at protocol level or message board level? probably protocol
 
