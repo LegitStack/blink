@@ -6,7 +6,6 @@ import inspect
 
 # TODO add ability to refer to a different board,
 # TODO add ability to trigger messages to go to a different board.
-# TODO add ability for user to talk to actor who asks for things.
 
 class Actor():
     ''' an entity does computation, though nobody else knows what it is or how to call it. '''
@@ -31,30 +30,58 @@ class Actor():
         self.partial_builds = {}
         self.verbose = verbose
         self.shutdown = False
+        self.default_board_index = 0
         if accepts_user_input:
             self.listen_to_user()
 
-    def add_function(self, name, function, arguments: tuple):
-        self.functions[name] = (function, arguments)
+    def add_function(self, function: callable):
+        self.functions[function.__name__] = function, inspect.getargspec(function).args
 
-    def add_trigger(self, name, function_name):
-        self.triggers[name] = function_name
+    def add_functions(self, functions: list):
+        for function in functions:
+            self.functions[function.__name__] = function, inspect.getargspec(function).args
+
+    def add_trigger(self, cause: str, effect: str):
+        self.triggers[cause] = effect
+
+    def set_messageboard(self, name: str):
+        def find_board():
+            for i, msgboard in enumerate(self.msgboards):
+                if name in msgboard.name:
+                    ix = i
+                elif name == msgboard.name:
+                    return i
+            return ix if ix > -1 else None
+
+        self.default_board_index = find_board() or 0
 
     def listen_to_user(self):
 
         def wire():
+            def make_message():
+                message = self.craft_message(
+                    msgboard=self.msgboards[self.default_board_index],
+                    request=the_voice_of_god,
+                )
+                self.say(message, self.msgboards[self.default_board_index])
+
+            def handle_shutdown():
+                if the_voice_of_god == 'shutdown':
+                    print('shutting down')
+                    self.shutdown = True
+                    sys.exit()
+
             print(f'listening to user input forever') if self.verbose else None
             while True:
                 the_voice_of_god = input()
                 if the_voice_of_god in self.functions.keys():
-                    # allow user to change message board too
-                    new_id = self.msgboards[0].produce_id()
-                    message = {'id': new_id, 'ref_id': new_id, 'request': the_voice_of_god}
-                    self.say(message, self.msgboards[0])
-                    if the_voice_of_god == 'shutdown':
-                        print('shutting down')
-                        self.shutdown = True
-                        sys.exit()
+                    make_message()
+                else:
+                    answer = input('Function not found. Request of all actors?  ')
+                    if 'y' in answer.lower():
+                        make_message()
+                handle_shutdown()
+
 
         threads = []
         threads.append(Thread(target=wire))
@@ -290,8 +317,7 @@ class Actor():
         substitutions=None,
     ):
         message = {'id': msgboard.produce_id()}
-        if ref_id:
-            message['ref_id'] = ref_id
+        message['ref_id'] = ref_id or message['id']
         if response:
             message['response'] = response
         if request:
