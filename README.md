@@ -46,6 +46,17 @@ Functions are just names given for a specific transformation on data. but a func
 
 eventually we want to get to the point where actors are guiding other actors on how to change in a hierarchy and networked fashion. If all functions are just a transformation on data and if the representation for that transformation is itself just data we want to have functions modify other functions so they tranform the data correctly for their context and needs
 
+
+### intelligent design
+
+For intelligent design we need at least two relative variables. Context and Narrative (goals).
+
+Each time we call a function it's actor needs to know, (be given or discover) the context in which this function is being called. As a conceptual example: Is this shirt white or grey? the only way to know is to give a context, what is the lighting in the view? if its dim lighting it may appear grey but really be white. Context is information gained from the network, not from the hierarchy.
+
+We also need goals or Narrative. Narrative is a distributed phenomenon throughout the hierarchy. Consider for example: the goal is to go to the kitchen. that goal is the overall Narrative but sits inside a higher Narrative. the larger goal we may not even know and at some point it certainly doesn't matter. For instance, the human directing the program directs it for specific purposes, and those purposes are dictated by his employer or the cause of his aims, etc, etc. In this example with the goal for (perhaps a robot) to go to the kitchen, it receives this goal from the human, it is the highest level goal the robot is aware of. So what it does with this goal is break it down into smaller goals, each of which feed the over arching Narrative: go to the kitchen. These sub goals, given that we are dealing with the actor model of programming are ordered and perhaps executed simultaneously, depends on the goal. However, those sub goals are defined by the discovered context in which the Narrative must be accomplished. For instance if the goal is to go to the kitchen the robot needs know first know where it is currently, then it can produce sub goals to accomplish the task.
+
+Thus the two are intertwined. sub goals have encoded within them the implication of the higher level context. but that implied information is distributed amongst all the sub goals. this is the inklings of an architecture that I feel would fit this actor model well, but designing it in detail is far beyond me.
+
 ## integrating with distributed consensus mechanisms
 
 One thing that must be done before this system is mature is to integrate the gossip protocol (Hashgraph) so that actors can re-evaluate past decisions they made in light of new information about the true state of the system at the time that their decision was made and issue an updated response in the event that something substantial they believed or took as input was not true and therefore their response was inaccurate to the requested task.
